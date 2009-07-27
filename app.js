@@ -1,12 +1,30 @@
 var server = require('http_server.js');
 
-function render_template(template, data, callback) {
-  node.fs.cat("templates/" + template + ".xhtml").addCallback(function (text) {
-    for (var key in data) {
-      if (!data.hasOwnProperty(key)) { continue; }
-      text = text.replace("#{" + key + "}", data[key]);
-    }
-    callback(text);
+var template_cache = {};
+
+function render_template(template, user, level, callback) {
+  var cache_key = template + "/" + user + "/" + level;
+  if (template_cache[cache_key]) {
+//    puts("USING CACHE: " + cache_key);
+    callback(template_cache[cache_key]);
+    return;
+  }
+  load_map(user, level, function (level_data) {
+	  var data = {
+		  "title": "SousaBall " + user + " - " + level,
+		  "user": user,
+		  "name": level,
+		  "level": JSON.stringify(level_data)
+	  };
+    node.fs.cat("templates/" + template + ".xhtml").addCallback(function (text) {
+      for (var key in data) {
+        if (!data.hasOwnProperty(key)) { continue; }
+        text = text.replace("#{" + key + "}", data[key]);
+      }
+//      puts("SETTING CACHE: " + cache_key);
+      template_cache[cache_key] = text;
+      callback(text);
+    });
   });
 }
 
@@ -22,6 +40,8 @@ function load_map(user, level, callback) {
 }
 
 function save_map(user, level, data, callback) {
+  var key = user + "/" + level;
+  template_cache = {};
   var file = new node.fs.File();
   file.open("data/" + user + "/" + level + ".level", "w");
   file.write(JSON.stringify(data));
@@ -29,37 +49,18 @@ function save_map(user, level, data, callback) {
 }
 
 function play(req, res, user, level) {
-  puts("PLAY ACTION");
-  load_map(user, level, function (level_data) {
-	  var data = {
-		  "title": "SousaBall " + user + " - " + level,
-		  "user": user,
-		  "name": level,
-		  "level": JSON.stringify(level_data)
-	  };
-	  render_template('play', data, function (html) {
-	    res.simpleHtml(200, html);
-	  });
+  render_template('play', user, level, function (html) {
+    res.simpleHtml(200, html);
   });
 }
 
 function edit(req, res, user, level) {
-  puts("EDIT ACTION");
-  load_map(user, level, function (level_data) {
-	  var data = {
-		  "title": "SousaBall " + user + " - " + level,
-		  "user": user,
-		  "name": level,
-		  "level": JSON.stringify(level_data)
-	  };
-	  render_template('edit', data, function (html) {
-	    res.simpleHtml(200, html);
-	  });
+  render_template('edit', user, level, function (html) {
+    res.simpleHtml(200, html);
   });
 }
 
 function save(req, res, user, level) {
-  puts("SAVE ACTION");
   req.setBodyEncoding('utf8');
   var body = "";
   req.addListener('body', function (chunk) {
