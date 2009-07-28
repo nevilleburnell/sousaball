@@ -5,7 +5,6 @@ var template_cache = {};
 function render_template(template, user, level, callback) {
   var cache_key = template + "/" + user + "/" + level;
   if (template_cache[cache_key]) {
-//    puts("USING CACHE: " + cache_key);
     callback(template_cache[cache_key]);
     return;
   }
@@ -16,26 +15,37 @@ function render_template(template, user, level, callback) {
 		  "name": level,
 		  "level": JSON.stringify(level_data)
 	  };
-    node.fs.cat("templates/" + template + ".xhtml").addCallback(function (text) {
+	  var promise = node.fs.cat("templates/" + template + ".xhtml");
+    promise.addCallback(function (text) {
       for (var key in data) {
         if (!data.hasOwnProperty(key)) { continue; }
         text = text.replace("#{" + key + "}", data[key]);
       }
-//      puts("SETTING CACHE: " + cache_key);
       template_cache[cache_key] = text;
       callback(text);
+    });
+    promise.addErrback(function () {
+      callback("Missing template: " + template);
     });
   });
 }
 
 function load_map(user, level, callback) {
   var folder = "data/" + user + "/";
-  node.fs.cat(folder + level + ".level").addCallback(function (json) {
+  var promise = node.fs.cat(folder + level + ".level");
+  promise.addCallback(function (json) {
     var level_data = JSON.parse(json);
-    node.fs.cat(folder + level_data.blockset + ".tileset").addCallback(function (json) {
+    promise = node.fs.cat(folder + level_data.blockset + ".tileset")
+    promise.addCallback(function (json) {
       level_data.blocks = JSON.parse(json);
       callback(level_data);
     });
+    promise.addErrback(function () {
+      callback({error: "Missing tileset", user: user, tileset: level_data.blockset});
+    });
+  });
+  promise.addErrback(function () {
+    callback({error: "Missing level file", user: user, level: level});
   });
 }
 
@@ -77,9 +87,15 @@ function save(req, res, user, level) {
 function onLoad() {
 
   // Register routes
-  server.get(new RegExp('^/(.+)/(.+);edit$'), edit);
-  server.get(new RegExp('^/(.+)/(.+)$'), play);
-  server.post(new RegExp('^/(.+)/(.+)$'), save);
+  server.get(new RegExp('^/$'), function (req, res) {
+    server.staticHandler(req, res, "public/index.html");
+  });
+  server.get(new RegExp('^(/.+\.(js|css|png))$'), function (req, res, path) {
+    server.staticHandler(req, res, "public" + path);
+  });
+  server.get(new RegExp('^/([^/]+)/([^/]+);edit$'), edit);
+  server.get(new RegExp('^/([^/]+)/([^/]+)$'), play);
+  server.post(new RegExp('^/([^/]+)/([^/]+)$'), save);
 
   // Kickoff the server
   server.listen(7001);
