@@ -5,8 +5,8 @@ var template_cache = {};
 function render_template(template, user, level, callback) {
   var cache_key = template + "/" + user + "/" + level;
   if (template_cache[cache_key]) {
-//    callback(template_cache[cache_key]);
-//    return;
+    callback(template_cache[cache_key]);
+    return;
   }
   load_map(user, level, function (level_data) {
 	  var data = {
