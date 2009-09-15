@@ -15,7 +15,7 @@ function render_template(template, user, level, callback) {
 			"name": level,
 			"level": JSON.stringify(level_data)
 		};
-		var promise = node.fs.cat("templates/" + template + ".xhtml");
+		var promise = node.fs.cat("templates/" + template + ".xhtml", "utf8");
 		promise.addCallback(function (text) {
 			for (var key in data) {
 				if (!data.hasOwnProperty(key)) { continue; }
@@ -32,10 +32,10 @@ function render_template(template, user, level, callback) {
 
 function load_map(user, level, callback) {
 	var folder = "data/" + user + "/";
-	var promise = node.fs.cat(folder + level + ".level");
+	var promise = node.fs.cat(folder + level + ".level", "utf8");
 	promise.addCallback(function (json) {
 		var level_data = JSON.parse(json);
-		promise = node.fs.cat(folder + level_data.blockset + ".tileset");
+		promise = node.fs.cat(folder + level_data.blockset + ".tileset", "utf8");
 		promise.addCallback(function (json) {
 			level_data.blocks = JSON.parse(json);
 			callback(level_data);
@@ -55,7 +55,9 @@ function save_map(user, level, data, callback) {
 	node.debug("Saving File\n" + node.O_CREAT +"\n");
 	node.fs.open("data/" + user + "/" + level + ".level", node.O_TRUNC | node.O_WRONLY | node.O_CREAT, 00600).addCallback(function (fd) {
 		node.debug("Saving File2\n");
-		node.fs.write(fd, JSON.stringify(data)).addCallback(function (len) {
+		var json = JSON.stringify(data);
+		node.debug(json);
+		node.fs.write(fd, json).addCallback(function (len) {
 			node.debug("Saving File3\n");
 			node.fs.close(fd);
 			node.debug("Calling " + callback + "\n");
