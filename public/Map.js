@@ -301,7 +301,7 @@ Map.prototype = {
 				}
 			break;
 			default:
-				console.log(shape);
+				//console.log(shape);
 			break;
 		}
 		ctx.restore();

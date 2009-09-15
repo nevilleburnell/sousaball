@@ -283,7 +283,6 @@ Engine.prototype = {
 		{
 			if (coins[i] === 0)
 			{
-    		console.log(coins[i], i);
 				this.executeSecret('finish', i);
 				coins[i] = null;
 			}
