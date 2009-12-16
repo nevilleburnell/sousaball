@@ -1,10 +1,11 @@
-node.mixin(require('/utils.js'));
-var http = require('/http.js');
-
+var sys = require('sys');
+var posix = require('posix');
+var http = require('http')
 var NOT_FOUND = "Not Found\n";
+var routes = [];
 
 function notFound(req, res, message) {
-  debug("notFound!");
+  sys.debug("notFound!");
   message = message || NOT_FOUND;
   res.sendHeader(404, [ ["Content-Type", "text/plain"],
                         ["Content-Length", message.length]
@@ -12,8 +13,6 @@ function notFound(req, res, message) {
   res.sendBody(message);
   res.finish();
 }
-
-var routes = [];
 
 function addRoute(method, pattern, handler, format) {
 	var route = {
@@ -103,7 +102,7 @@ exports.resourceController = function (name, data, on_change) {
 
 var server = http.createServer(function (req, res) {
   var path = req.uri.path;
-  puts(req.method + " " + path);
+  sys.puts(req.method + " " + path);
 
   res.simpleText = function (code, body, extra_headers) {
     res.sendHeader(code, (extra_headers || []).concat(
@@ -173,7 +172,7 @@ var server = http.createServer(function (req, res) {
 
 exports.listen = function (port, host) {
   server.listen(port, host);
-  puts("Server at http://" + (host || "127.0.0.1") + ":" + port.toString() + "/");
+  sys.puts("Server at http://" + (host || "127.0.0.1") + ":" + port.toString() + "/");
 };
 
 exports.close = function () { server.close(); };
@@ -194,7 +193,7 @@ exports.staticHandler = function (req, res, filename) {
       return;
     }
 
-    node.fs.cat(filename, encoding).addCallback(function (data) {
+    posix.cat(filename, encoding).addCallback(function (data) {
       body = data;
       headers = [ [ "Content-Type"   , content_type ],
                   [ "Content-Length" , body.length ]

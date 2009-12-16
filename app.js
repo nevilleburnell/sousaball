@@ -1,10 +1,12 @@
-var server = require('http_server.js');
+var server = require('./node-router');
+var posix = require('posix');
+var file = require('file');
 
 var template_cache = {};
 
 function render_template(template, user, level, callback) {
 	var cache_key = template + "/" + user + "/" + level;
-	if (template_cache[cache_key]) {
+	if (false && template_cache[cache_key]) {
 		callback(template_cache[cache_key]);
 		return;
 	}
@@ -15,7 +17,7 @@ function render_template(template, user, level, callback) {
 			"name": level,
 			"level": JSON.stringify(level_data)
 		};
-		var promise = node.fs.cat("templates/" + template + ".xhtml");
+		var promise = posix.cat("templates/" + template + ".xhtml");
 		promise.addCallback(function (text) {
 			for (var key in data) {
 				if (!data.hasOwnProperty(key)) { continue; }
@@ -32,10 +34,10 @@ function render_template(template, user, level, callback) {
 
 function load_map(user, level, callback) {
 	var folder = "data/" + user + "/";
-	var promise = node.fs.cat(folder + level + ".level");
+	var promise = posix.cat(folder + level + ".level");
 	promise.addCallback(function (json) {
 		var level_data = JSON.parse(json);
-		promise = node.fs.cat(folder + level_data.blockset + ".tileset");
+		promise = posix.cat(folder + level_data.blockset + ".tileset");
 		promise.addCallback(function (json) {
 			level_data.blocks = JSON.parse(json);
 			callback(level_data);
@@ -50,14 +52,8 @@ function load_map(user, level, callback) {
 }
 
 function save_map(user, level, data, callback) {
-	var key = user + "/" + level;
-	template_cache = {};
-	node.fs.open("data/" + user + "/" + level + ".level", node.O_TRUNC | node.O_WRONLY | node.O_CREAT, 00600).addCallback(function (fd) {
-		node.fs.write(fd, JSON.stringify(data)).addCallback(function (len) {
-			node.fs.close(fd);
-			callback();
-		});
-	});
+  var filename = "data/" + user + "/" + level + ".level";
+	file.write(filename, JSON.stringify(data)).addCallback(callback);
 }
 
 function play(req, res, user, level) {
