@@ -1,6 +1,7 @@
 var sys = require('sys');
 var posix = require('posix');
-var http = require('http')
+var http = require('http');
+var url_parse = require("url").parse;
 var NOT_FOUND = "Not Found\n";
 var routes = [];
 
@@ -101,7 +102,8 @@ exports.resourceController = function (name, data, on_change) {
 };
 
 var server = http.createServer(function (req, res) {
-  var path = req.uri.path;
+  var uri = url_parse(req.url);
+  var path = uri.pathname;
   sys.puts(req.method + " " + path);
 
   res.simpleText = function (code, body, extra_headers) {
@@ -135,7 +137,7 @@ var server = http.createServer(function (req, res) {
   res.notFound = function (message) {
 		notFound(req, res, message);
 	};
-  
+
   for (var i = 0, l = routes.length; i < l; i += 1) {
     var route = routes[i];
     if (req.method === route.method) {
@@ -159,13 +161,13 @@ var server = http.createServer(function (req, res) {
             route.handler.apply(null, match);
       	  });
       	  return;
-        } 
+        }
         route.handler.apply(null, match);
         return;
       }
     }
   }
-  
+
   notFound(req, res);
 
 });
@@ -199,7 +201,7 @@ exports.staticHandler = function (req, res, filename) {
                   [ "Content-Length" , body.length ]
                 ];
       headers.push(["Cache-Control", "public"]);
-       
+
       callback();
     }).addErrback(function () {
       notFound(req, res, "Cannot find file: " + filename);
@@ -219,7 +221,7 @@ exports.mime = {
   lookupExtension : function(ext, fallback) {
     return exports.mime.TYPES[ext.toLowerCase()] || fallback || 'application/octet-stream';
   },
-  
+
   // List of most common mime-types, stolen from Rack.
   TYPES : { ".3gp"   : "video/3gpp",
           	".a"     : "application/octet-stream",
