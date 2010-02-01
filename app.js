@@ -1,4 +1,4 @@
-var server = require('./node-router');
+var server = require('node-router');
 var posix = require('posix');
 var file = require('file');
 
@@ -75,11 +75,11 @@ function save(req, res, user, level, data) {
 }
 
 // function user(req, res, user) {
-//	
+//
 // }
-// 
+//
 // function create(req, res, user, level) {
-//	
+//
 // }
 
 // Register routes
@@ -93,7 +93,7 @@ server.get(new RegExp('^(/.+\.(js|css|png))$'), function (req, res, path) {
 	server.staticHandler(req, res, "public" + path);
 });
 
-// 
+//
 server.get(new RegExp('^/([^/]+)/([^/]+);edit$'), edit);
 server.get(new RegExp('^/([^/]+)/([^/]+)$'), play);
 server.post(new RegExp('^/([^/]+)/([^/]+)$'), save, 'json');
