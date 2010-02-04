@@ -17,7 +17,7 @@ function render_template(template, user, level, callback) {
 			"name": level,
 			"level": JSON.stringify(level_data)
 		};
-		var promise = posix.cat("templates/" + template + ".xhtml");
+		var promise = posix.cat(__dirname + "/templates/" + template + ".xhtml");
 		promise.addCallback(function (text) {
 			for (var key in data) {
 				if (!data.hasOwnProperty(key)) { continue; }
@@ -33,7 +33,7 @@ function render_template(template, user, level, callback) {
 }
 
 function load_map(user, level, callback) {
-	var folder = "data/" + user + "/";
+	var folder = __dirname + "/data/" + user + "/";
 	var promise = posix.cat(folder + level + ".level");
 	promise.addCallback(function (json) {
 		var level_data = JSON.parse(json);
@@ -86,11 +86,11 @@ function save(req, res, user, level, data) {
 
 // Redirect root url to index page
 server.get(new RegExp('^/$'), function (req, res) {
-	server.staticHandler(req, res, "public/index.html");
+	server.staticHandler(req, res, __dirname + "/public/index.html");
 });
 // Serve js, css, and png files as static resources
 server.get(new RegExp('^(/.+\.(js|css|png))$'), function (req, res, path) {
-	server.staticHandler(req, res, "public" + path);
+	server.staticHandler(req, res, __dirname + "/public" + path);
 });
 
 //
@@ -102,6 +102,6 @@ server.post(new RegExp('^/([^/]+)/([^/]+)$'), save, 'json');
 // server.put(new RegExp('^/([^/]+)/([^/]+)$'), create);
 
 // Kickoff the server
-server.listen(7001);
+server.listen(7001, "127.0.0.1", __dirname + "/");
 
 
