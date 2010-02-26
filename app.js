@@ -16,8 +16,11 @@ function render_template(template, user, level, callback) {
 			"name": level,
 			"level": JSON.stringify(level_data)
 		};
-		var promise = fs.readFile(__dirname + "/templates/" + template + ".xhtml");
-		promise.addCallback(function (text) {
+		fs.readFile(__dirname + "/templates/" + template + ".xhtml", function (err, text) {
+		  if (err) {
+		    callback("Missing template: " + template);
+  			return;
+		  }
 			for (var key in data) {
 				if (!data.hasOwnProperty(key)) { continue; }
 				text = text.replace("#{" + key + "}", data[key]);
@@ -25,34 +28,31 @@ function render_template(template, user, level, callback) {
 			template_cache[cache_key] = text;
 			callback(text);
 		});
-		promise.addErrback(function () {
-			callback("Missing template: " + template);
-		});
 	});
 }
 
 function load_map(user, level, callback) {
 	var folder = __dirname + "/data/" + user + "/";
-	var promise = fs.readFile(folder + level + ".level");
-	promise.addCallback(function (json) {
+	fs.readFile(folder + level + ".level", function (err, json) {
+	  if (err) {
+	    callback({error: "Missing level file", user: user, level: level});
+  		return;
+	  }
 		var level_data = JSON.parse(json);
-		promise = fs.readFile(folder + level_data.blockset + ".tileset");
-		promise.addCallback(function (json) {
+		fs.readFile(folder + level_data.blockset + ".tileset", function (err, json) {
+		  if (err) {
+		    callback({error: "Missing tileset", user: user, tileset: level_data.blockset});
+  			return;
+		  }
 			level_data.blocks = JSON.parse(json);
 			callback(level_data);
 		});
-		promise.addErrback(function () {
-			callback({error: "Missing tileset", user: user, tileset: level_data.blockset});
-		});
-	});
-	promise.addErrback(function () {
-		callback({error: "Missing level file", user: user, level: level});
 	});
 }
 
 function save_map(user, level, data, callback) {
   var filename = "data/" + user + "/" + level + ".level";
-	fs.writeFile(filename, JSON.stringify(data)).addCallback(callback);
+	fs.writeFile(filename, JSON.stringify(data), callback);
 }
 
 function play(req, res, user, level) {
