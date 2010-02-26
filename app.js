@@ -88,7 +88,7 @@ server.get(new RegExp('^/$'), function (req, res) {
 	server.staticHandler(req, res, __dirname + "/public/index.html");
 });
 // Serve js, css, and png files as static resources
-server.get(new RegExp('^(/.+\.(js|css|png))$'), function (req, res, path) {
+server.get(new RegExp('^(/.+\.(js|css|png|ico))$'), function (req, res, path) {
 	server.staticHandler(req, res, __dirname + "/public" + path);
 });
 
