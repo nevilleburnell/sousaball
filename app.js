@@ -1,4 +1,5 @@
-var server = require('node-router');
+var NodeRouter = require('node-router')
+var server = NodeRouter.getServer();
 var fs = require('fs');
 
 var template_cache = {};
@@ -84,13 +85,10 @@ function save(req, res, user, level, data) {
 // Register routes
 
 // Redirect root url to index page
-server.get(new RegExp('^/$'), function (req, res) {
-	server.staticHandler(req, res, __dirname + "/public/index.html");
-});
+server.get("/", NodeRouter.staticHandler(__dirname + "/public/index.html"));
+
 // Serve js, css, and png files as static resources
-server.get(new RegExp('^(/.+\.(js|css|png|ico))$'), function (req, res, path) {
-	server.staticHandler(req, res, __dirname + "/public" + path);
-});
+server.get(/^(\/.+\.(js|css|png|ico))$/, NodeRouter.staticDirHandler(__dirname + "/public"));
 
 //
 server.get(new RegExp('^/([^/]+)/([^/]+);edit$'), edit);
